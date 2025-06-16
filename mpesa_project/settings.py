@@ -48,8 +48,6 @@ ALLOWED_HOSTS = [
 INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
-    "mpesa_app.apps.MpesaConfig",
-    "mpesa_app",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -57,7 +55,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "mpesa_app.apps.StkappConfig",
-    "corsheaders",
 
 ]
 AUTH_USER_MODEL="mpesa_app.CustomUser"
