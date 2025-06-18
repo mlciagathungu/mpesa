@@ -24,7 +24,8 @@ class Transaction(models.Model):
         return f"Transaction ID: {self.mpesa_receipt_number} {self.name}"
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(blank=True,null=True),
+    full_name = models.CharField(max_length=100, blank=True,null=True)
+    email = models.EmailField(blank=True,null=True)
     phone_number = models.CharField(max_length=15,blank=True,null=True)
 
 

@@ -36,23 +36,47 @@ class MpesaStkPushView(APIView):
         phone = request.data.get('phone_number')
         amount = request.data.get('amount')
         account_reference = request.data.get('account_reference')
-        transaction_desc = request.data.get('transaction_desc')
-        # -- Replace with your credentials --
+        description = request.data.get('description', 'WiFi Purchase')
+
+        # Validate required fields
+        if not phone or not amount or not account_reference:
+            return Response(
+                {"success": False, "CustomerMessage": "Missing required fields."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # -- Replace these with your actual credentials --
         consumer_key = 'YOUR_CONSUMER_KEY'
         consumer_secret = 'YOUR_CONSUMER_SECRET'
         shortcode = 'YOUR_SHORTCODE'
         passkey = 'YOUR_PASSKEY'
         callback_url = 'https://yourdomain.com/api/mpesa/callback/'
         base_url = 'https://sandbox.safaricom.co.ke'
-        # -- Get access token --
-        auth_url = f'{base_url}/oauth/v1/generate?grant_type=client_credentials'
-        auth = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
-        headers = {'Authorization': f'Basic {auth}'}
-        r = requests.get(auth_url, headers=headers)
-        access_token = r.json().get('access_token')
-        # -- Prepare STK Push request --
+        # -- END credentials --
+
+        # Step 1: Get access token
+        try:
+            auth_url = f'{base_url}/oauth/v1/generate?grant_type=client_credentials'
+            auth = base64.b64encode(f"{consumer_key}:{consumer_secret}".encode()).decode()
+            headers = {'Authorization': f'Basic {auth}'}
+            r = requests.get(auth_url, headers=headers, timeout=10)
+            r.raise_for_status()
+            access_token = r.json().get('access_token')
+            if not access_token:
+                return Response(
+                    {"success": False, "CustomerMessage": "Failed to get M-Pesa access token."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        except Exception as e:
+            return Response(
+                {"success": False, "CustomerMessage": f"Error getting access token: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Step 2: Prepare STK Push request
         timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        password = base64.b64encode(f"{shortcode}{passkey}{timestamp}".encode()).decode()
+        password_str = f"{shortcode}{passkey}{timestamp}"
+        password = base64.b64encode(password_str.encode()).decode()
         stk_url = f"{base_url}/mpesa/stkpush/v1/processrequest"
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -69,12 +93,37 @@ class MpesaStkPushView(APIView):
             "PhoneNumber": phone,
             "CallBackURL": callback_url,
             "AccountReference": account_reference,
-            "TransactionDesc": transaction_desc
+            "TransactionDesc": description
         }
-        resp = requests.post(stk_url, json=payload, headers=headers)
-        if resp.ok and resp.json().get("ResponseCode") == "0":
-            return Response({"success": True, "message": "STK Push initiated. Check your phone."})
-        return Response({"success": False, "message": resp.json().get("errorMessage", "Failed")}, status=400)
+
+        # Step 3: Send STK Push request
+        try:
+            resp = requests.post(stk_url, json=payload, headers=headers, timeout=15)
+            resp_json = resp.json()
+        except Exception as e:
+            return Response(
+                {"success": False, "CustomerMessage": f"Error sending STK Push: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Step 4: Interpret Safaricom response
+        if resp.ok and resp_json.get("ResponseCode") == "0":
+            return Response({
+                "success": True,
+                "MerchantRequestID": resp_json.get("MerchantRequestID"),
+                "CheckoutRequestID": resp_json.get("CheckoutRequestID"),
+                "ResponseCode": resp_json.get("ResponseCode"),
+                "ResponseDescription": resp_json.get("ResponseDescription"),
+                "CustomerMessage": resp_json.get("CustomerMessage"),
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "success": False,
+                "ResponseCode": resp_json.get("ResponseCode"),
+                "ResponseDescription": resp_json.get("ResponseDescription"),
+                "CustomerMessage": resp_json.get("CustomerMessage") or resp_json.get("errorMessage") or "STK Push failed.",
+                "errorMessage": resp_json.get("errorMessage"),
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 

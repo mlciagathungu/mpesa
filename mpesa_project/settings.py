@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "mpesa_app.apps.StkappConfig",
+    "corsheaders",
 
 ]
 AUTH_USER_MODEL="mpesa_app.CustomUser"
