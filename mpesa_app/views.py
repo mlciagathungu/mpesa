@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -30,7 +32,7 @@ class LoginView(APIView):
                 return Response({'token': token.key})
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+@method_decorator(csrf_exempt, name='dispatch')
 class MpesaStkPushView(APIView):
     def post(self, request):
         phone = request.data.get('phone_number')
@@ -46,12 +48,12 @@ class MpesaStkPushView(APIView):
             )
 
         # -- Replace these with your actual credentials --
-        consumer_key = 'YOUR_CONSUMER_KEY'
-        consumer_secret = 'YOUR_CONSUMER_SECRET'
-        shortcode = 'YOUR_SHORTCODE'
-        passkey = 'YOUR_PASSKEY'
-        callback_url = 'https://yourdomain.com/api/mpesa/callback/'
-        base_url = 'https://sandbox.safaricom.co.ke'
+        consumer_key = "HXNYqA2gUlKqtj37sWQ2GvgNJu9PjfNGY5mkv8M8ZysqwA4D"
+        consumer_secret = "TGADuZIMQQgpLM2xea4ujJIXhbApOt9IWFD9GiRVgELrYhmpmA5RoICDWDUx1nhu"
+        shortcode= "174379"
+        passkey= "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+        callback_url = "https://caac-102-140-248-44.ngrok-free.app/api/mpesa/callback/"
+        base_url = "https://sandbox.safaricom.co.ke"
         # -- END credentials --
 
         # Step 1: Get access token

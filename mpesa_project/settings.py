@@ -35,11 +35,11 @@ PASSKEY = os.getenv('PASSKEY','default_passkey')
 SECRET_KEY = "django-insecure-ji518e(__l89)5(vy9zdw+r=ojeqc@g(*t0ha*ts18=$9_mjz+"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
-    'a5b1-197-237-118-180.ngrok-free.app'
+    'caac-102-140-248-44.ngrok-free.app '
 ]
 
 
@@ -68,7 +68,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "https://a5b1-197-237-118-180.ngrok-free.app"
+    "https://caac-102-140-248-44.ngrok-free.app "
 ]
 CORS_ALLOWED_ALL_ORIGINS = True
 
